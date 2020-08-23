@@ -23,10 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.order.details.client.CustomerDetailsClient;
 import com.order.details.client.ProductDetailsClient;
 import com.order.details.entity.OrderEntity;
+import com.order.details.model.CustomerDetails;
 import com.order.details.model.OrderDetailsRequest;
 import com.order.details.model.OrderDetailsResponse;
 import com.order.details.service.OrderDetailsService;
 import com.order.details.transformer.OrderDetailsTransformer;
+import com.order.details.utils.EmailUtil;
 
 import io.swagger.annotations.Api;
 
@@ -38,6 +40,12 @@ public class OrderDetailsController {
 	private static final String MESSAGE = "Order requested With ";
 
 	private static final Logger logger = LoggerFactory.getLogger(OrderDetailsController.class);
+	
+	
+	private static final String EMESSAGE = "Customer With phone number ";
+	private static final String SUBJECT = "Order has been placed!!! ";
+	private static final String BODY = "Your order has been placed succcessfully with order ID : ";
+	private static final String SIGNATURE = "\nThanks,\nPavelist Inc.";
 
 	@Autowired
 	private OrderDetailsService orderDetailsService;
@@ -50,6 +58,9 @@ public class OrderDetailsController {
 
 	@Autowired
 	private CustomerDetailsClient customerDetailsClient;
+	
+	@Autowired
+	private EmailUtil email;
 
 	@PostMapping(path = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<OrderDetailsResponse> createOrder(@Valid @RequestBody OrderDetailsRequest orderDetailsRequest)
@@ -60,9 +71,14 @@ public class OrderDetailsController {
 		productQuantityValidation(orderDetailsRequest);
 		productDetailsClient.updateQuantity(orderDetailsRequest.getProductCode(),
 				orderDetailsRequest.getQuantityOrdered());
-		orderDetailsService.saveOrder(orderDetailsTransformer.transformOrderDetails(orderDetailsRequest));
+		String orderId =orderDetailsService.saveOrder(orderDetailsTransformer.transformOrderDetails(orderDetailsRequest));
 		OrderDetailsResponse response = new OrderDetailsResponse(
-				MESSAGE + orderDetailsRequest.getOrderNumber() + " created Successfully");
+				MESSAGE + orderDetailsRequest.getCustomerId() + " created Successfully");
+		// We have to get email id using custoer shirt
+		
+		CustomerDetails customer=getCustomerDetails(orderDetailsRequest);
+		
+	email.sendEmail(customer.getMailId(), SUBJECT, "Hello "+customer.getFirstName() +"\n"+ BODY + orderId +SIGNATURE);
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 
 	}
@@ -126,11 +142,25 @@ public class OrderDetailsController {
 
 		String customerId = orderDetailsRequest.getCustomerId();
 		Boolean checkCustomerExistsByCustomerId = customerDetailsClient.checkCustomerExistsByCustomerId(customerId);
-		if (!checkCustomerExistsByCustomerId) {
+		if (!checkCustomerExistsByCustomerId) {		
 			OrderDetailsResponse response = new OrderDetailsResponse("Customer id: " + customerId + " not found");
 			return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 		}
 		return null;
+	}
+	private CustomerDetails getCustomerDetails(OrderDetailsRequest orderDetailsRequest) {
+		CustomerDetails customer = null;
+		try {
+			 customer = customerDetailsClient.getCustomerDetailsByCustomerId(orderDetailsRequest.getCustomerId());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(customer!=null) {
+			return customer;
+		}
+		return null;
+		
 	}
 
 	private ResponseEntity<OrderDetailsResponse> productValidation(OrderDetailsRequest orderDetailsRequest)

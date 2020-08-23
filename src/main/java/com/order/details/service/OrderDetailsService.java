@@ -7,7 +7,7 @@ import com.order.details.entity.OrderEntity;
 
 public interface OrderDetailsService {
 
-	public void saveOrder(OrderEntity orderEntity);
+	public String saveOrder(OrderEntity orderEntity);
 
 	public Optional<OrderEntity> getOrderDetails(String orderNumber);
 

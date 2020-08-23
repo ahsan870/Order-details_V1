@@ -11,8 +11,6 @@ public class OrderDetailsTransformer {
 	public OrderEntity transformOrderDetails(OrderDetailsRequest orderDetailsRequest) {
 
 		OrderEntity orderEntity = new OrderEntity();
-		orderEntity.setOrderNumber(orderDetailsRequest.getOrderNumber());
-		orderEntity.setOrderStatus(orderDetailsRequest.getOrderStatus());
 		orderEntity.setCustomerId(orderDetailsRequest.getCustomerId());
 		orderEntity.setProductCode(orderDetailsRequest.getProductCode());
 		orderEntity.setPhoneNumber(orderDetailsRequest.getPhoneNumber());

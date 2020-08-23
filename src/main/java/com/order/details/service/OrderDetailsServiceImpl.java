@@ -2,6 +2,7 @@ package com.order.details.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,12 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
 	private OrderDetailsRepository orderDetailsRepository;
 
 	@Override
-	public void saveOrder(OrderEntity orderEntity) {
+	public String saveOrder(OrderEntity orderEntity) {
+		Random ran = new Random();
+		String orderId=String.valueOf(ran.nextInt(Integer.MAX_VALUE));
+		orderEntity.setOrderNumber(orderId);
 		orderDetailsRepository.save(orderEntity);
+		return orderId;
 
 	}
 
